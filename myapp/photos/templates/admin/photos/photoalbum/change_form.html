@@ -1,0 +1,71 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block content %}
+    {{ block.super }}
+    {% if show_upload_button %}
+    <div class="submit-row" style="margin-top: 20px;">
+        <h2>Загрузка нескольких фотографий</h2>
+        <form id="multiple-upload-form" action="{{ upload_url }}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="photos" multiple accept="image/*" style="margin-bottom: 10px;" required><br>
+            <input type="submit" value="Загрузить фотографии" class="default">
+        </form>
+    </div>
+    <script type="text/javascript">
+        console.log('Script loaded');
+        
+        function initializeUploadForm() {
+            console.log('Initializing upload form');
+            const form = document.getElementById('multiple-upload-form');
+            console.log('Form found:', form);
+            
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('Form submitted');
+                    console.log('Action URL:', this.action);
+                    const files = this.querySelector('input[type="file"]').files;
+                    console.log('Files:', files);
+                    
+                    const formData = new FormData(this);
+                    
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin'
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        if (response.redirected) {
+                            window.location.href = response.url;
+                        } else {
+                            return response.text().then(text => {
+                                console.log('Response text:', text);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                });
+                
+                console.log('Form handler attached');
+            } else {
+                console.error('Upload form not found');
+            }
+        }
+
+        // Попробуем оба варианта инициализации
+        document.addEventListener('DOMContentLoaded', initializeUploadForm);
+        // На случай, если DOMContentLoaded уже произошел
+        if (document.readyState === 'complete') {
+            initializeUploadForm();
+        }
+    </script>
+    {% endif %}
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+    {{ block.super }}
+{% endblock %} 
